@@ -1,9 +1,9 @@
 import logging
+
 from app.core.exceptions import DomainError
 from app.integrations.stripe.client import CheckoutClient
 from app.services.email_service import EmailService
 from app.services.fulfillment_service import FulfillmentService
-
 
 logger = logging.getLogger(__name__)
 

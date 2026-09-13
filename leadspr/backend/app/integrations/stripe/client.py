@@ -40,6 +40,7 @@ class StripeClient:
             session = client.v1.checkout.sessions.create(
                 params={
                     "mode": "payment",
+                    "locale": "es-419",
                     "managed_payments": {
                         "enabled": False,
                     },
@@ -55,7 +56,9 @@ class StripeClient:
                             "price_data": {
                                 "currency": "usd",
                                 "unit_amount": purchase.price_per_lead_cents,
-                                "product_data": {"name": "LeadsPR · Life Insurance leads"},
+                                "product_data": {
+                                    "name": "Borinquen Life & Protection · Leads de seguro de vida"
+                                },
                             },
                         }
                     ],

@@ -12,6 +12,20 @@ class AdminRepository:
     def __init__(self, session: Session) -> None:
         self.session = session
 
+    def totals(self) -> dict[str, int]:
+        active = (
+            self.session.scalar(
+                select(func.count()).select_from(Lead).where(Lead.source_active.is_(True))
+            )
+            or 0
+        )
+        fulfilled, revenue = self.session.execute(
+            select(
+                func.count(Purchase.id), func.coalesce(func.sum(Purchase.total_amount_cents), 0)
+            ).where(Purchase.status == PurchaseStatus.FULFILLED)
+        ).one()
+        return {"active_leads": active, "fulfilled_orders": fulfilled, "revenue_cents": revenue}
+
     def leads(
         self,
         *,

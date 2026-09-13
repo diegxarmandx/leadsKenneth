@@ -14,7 +14,9 @@ from tests.conftest import request_data
 
 def test_stripe_checkout_adapter_builds_server_owned_amounts(env, add_lead, monkeypatch):
     add_lead()
-    env.runtime.purchases().create_checkout(request_data())
+    env.client.patch("/api/v1/admin/pricing-rules/2", json={"price_cents": 2250}, headers=env.admin)
+    add_lead()
+    env.runtime.purchases().create_checkout(request_data(price=2250, quantity=2))
     purchase = env.stripe.calls[0]
     create = MagicMock(
         return_value=SimpleNamespace(id="cs_contract", url="https://checkout.stripe.com/example")
@@ -28,8 +30,12 @@ def test_stripe_checkout_adapter_builds_server_owned_amounts(env, add_lead, monk
     result = StripeClient(config).create_checkout(purchase)
     assert result.id == "cs_contract"
     params = create.call_args.kwargs["params"]
-    assert params["line_items"][0]["price_data"]["unit_amount"] == 2000
-    assert params["line_items"][0]["quantity"] == 1
+    assert params["line_items"][0]["price_data"]["unit_amount"] == 2250
+    assert params["line_items"][0]["quantity"] == 2
+    assert params["locale"] == "es-419"
+    assert params["line_items"][0]["price_data"]["product_data"]["name"] == (
+        "Borinquen Life & Protection · Leads de seguro de vida"
+    )
     assert params["metadata"] == {"purchase_public_id": purchase.public_id}
     assert purchase.public_id in params["success_url"]
     assert create.call_args.kwargs["options"]["idempotency_key"] == f"checkout/{purchase.public_id}"

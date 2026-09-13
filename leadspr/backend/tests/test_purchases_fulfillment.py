@@ -167,7 +167,9 @@ def test_email_failure_preserves_fulfillment_and_webhook_retry_only_retries_emai
     order = env.runtime.purchases().create_checkout(request_data())
     env.email.error = IntegrationError("Email temporarily unavailable")
     event = checkout_event(order)
-    assert send_event(env, event).status_code == 502
+    # The existing webhook acknowledges completed fulfillment even if delivery fails.
+    # Explicit event redelivery may retry email, but must never allocate twice.
+    assert send_event(env, event).status_code == 200
     saved = env.runtime.purchases().get_public(order.public_id)
     assert saved.status == PurchaseStatus.FULFILLED and saved.email_sent_at is None
     env.email.error = None

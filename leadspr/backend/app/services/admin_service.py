@@ -5,7 +5,9 @@ from app.core.exceptions import DomainError, NotFoundError
 from app.models import Lead
 from app.repositories.admin_repository import AdminRepository
 from app.repositories.purchase_repository import PurchaseRepository
-from app.schemas.admin import AdminLeadResponse, AdminPurchaseResponse
+from app.repositories.sync_repository import SyncRepository
+from app.schemas.admin import AdminLeadResponse, AdminPurchaseResponse, SyncRunResponse
+from app.schemas.pricing import PricingRuleResponse
 from app.services.inventory_service import InventoryService
 from app.services.pricing_service import PricingService
 
@@ -14,6 +16,53 @@ class AdminService:
     def __init__(self, session: Session, config: Settings) -> None:
         self.session, self.config = session, config
         self.repository = AdminRepository(session)
+
+    def dashboard(self) -> dict:
+        inventory = InventoryService(self.session, self.config).summary()
+        totals = self.repository.totals()
+        totals["available_inventory"] = sum(
+            tier["available_quantity"] for tier in inventory["tiers"]
+        )
+        recent = self.purchases(
+            offset=0,
+            limit=8,
+            status=None,
+            buyer_email=None,
+            public_id=None,
+            created_from=None,
+            created_to=None,
+        )
+        # Explicit presentation allowlist: payment identifiers and buyer contact details
+        # are unnecessary for the dashboard, even behind admin authentication.
+        orders = [
+            {
+                key: value
+                for key, value in item.model_dump().items()
+                if key
+                in {
+                    "public_id",
+                    "buyer_name",
+                    "municipality",
+                    "requested_quantity",
+                    "total_amount_cents",
+                    "status",
+                    "created_at",
+                }
+            }
+            for item in recent["items"]
+        ]
+        runs = SyncRepository(self.session).list(offset=0, limit=1)
+        return {
+            "stats": totals,
+            "inventory": inventory,
+            "recent_purchases": orders,
+            "last_sync": SyncRunResponse.model_validate(runs[0]) if runs else None,
+            "pricing_rules": [
+                PricingRuleResponse.model_validate(rule)
+                for rule in PricingService(self.session).list(active_only=True)
+            ],
+            "payment_mode": self.config.payment_mode,
+        }
 
     def leads(self, **filters) -> dict:
         minimum, maximum = filters["min_age_days"], filters["max_age_days"]

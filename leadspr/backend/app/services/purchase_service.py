@@ -31,6 +31,12 @@ class PurchaseService:
                 municipality=data.municipality,
                 insurance_type=data.insurance_type,
             )
+            # The submitted cents identify a tier; charge the validated stored price.
+            price_cents = next(
+                rule.price_cents
+                for rule in inventory.rules
+                if rule.price_cents == data.price_per_lead_cents
+            )
             repository = PurchaseRepository(session)
             public_id = self._public_id()
             while repository.by_public_id(public_id):
@@ -43,8 +49,8 @@ class PurchaseService:
                 municipality=data.municipality,
                 insurance_type=data.insurance_type,
                 requested_quantity=data.quantity,
-                price_per_lead_cents=data.price_per_lead_cents,
-                total_amount_cents=data.quantity * data.price_per_lead_cents,
+                price_per_lead_cents=price_cents,
+                total_amount_cents=data.quantity * price_cents,
                 status=PurchaseStatus.PENDING,
             )
         # Commit the order before the network call. No lead has been assigned or reserved.

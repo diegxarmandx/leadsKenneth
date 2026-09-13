@@ -18,5 +18,7 @@ node_modules/
 out/
 *.tsbuildinfo
 .DS_Store
+playwright-report/
+test-results/
 credentials*.json
 service-account*.json

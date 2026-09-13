@@ -24,6 +24,11 @@ Offset = Annotated[int, Query(ge=0)]
 Limit = Annotated[int, Query(ge=1, le=200)]
 
 
+@router.get("/dashboard")
+def dashboard(session: SessionDep, runtime: RuntimeDep) -> dict:
+    return AdminService(session, runtime.config).dashboard()
+
+
 @router.get("/leads")
 def leads(
     session: SessionDep,

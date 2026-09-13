@@ -69,6 +69,14 @@ class PricingService:
         rule = self.repository.get(rule_id)
         if rule is None:
             raise NotFoundError("Pricing rule not found")
+        # Checkout selects an exact price bucket. Keep edited tiers distinct so
+        # changing a price cannot silently combine different age groups.
+        if data.price_cents is not None and data.price_cents != rule.price_cents:
+            if any(
+                other.id != rule.id and other.is_active and other.price_cents == data.price_cents
+                for other in self.list()
+            ):
+                raise PricingRuleConflictError("Another active age tier already uses this price")
         old = self._snapshot(rule)
         try:
             merged = PricingRuleInput(**(old | data.model_dump(exclude_unset=True)))

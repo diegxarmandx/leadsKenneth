@@ -141,8 +141,17 @@ open-ended range. Single POST/PATCH operations reject gaps and overlaps. The sma
 `PUT /admin/pricing-rules` endpoint supports atomic edits to adjacent ranges: submit a JSON list
 of complete rules, include every existing ID exactly once, and use `id: null` for a new rule.
 Deactivate obsolete rules in the same request that introduces their replacements. Existing IDs
-are preserved for history. Inactive rules may overlap. Equal prices across ranges are allowed;
-inventory aggregates them into one exact-price tier.
+are preserved for history. Inactive rules may overlap. Legacy full-configuration operations support
+equal prices, which inventory aggregates into one exact-price tier. Price PATCH updates reject a
+price already used by another active rule so the four age tiers remain distinct in the admin editor.
+
+The frontend admin editor sends only positive integer `price_cents` through its authenticated
+server proxy; ages and exclusions stay read-only. Existing strict integer validation rejects zero,
+negative, fractional, string, boolean, and null values. Checkout validates the selected exact price
+against current inventory and uses the matching database rule to persist integer unit/total amounts.
+Stripe receives that stored unit amount and uses `es-419` for its hosted form. Historical purchases
+and allocations keep their stored prices after edits. Complete pending payments before changing
+prices: the existing fulfillment service rechecks current pricing and eligibility at payment time.
 
 ## Connect your Google Sheet
 
@@ -243,8 +252,10 @@ contact/source/campaign/language/notes fields, with escaped HTML and a plain-tex
 
 Resend is called only after allocation commits. `email_sent_at` means the provider accepted the send;
 it does not prove inbox delivery. A send failure leaves the purchase FULFILLED, preserves its prior
-email timestamp (null for initial failure), and records a sanitized audit/log error. The webhook
-returns a retryable failure so a repeated Stripe event retries delivery without reallocation.
+email timestamp (null for initial failure), and records an audit/log error. The existing webhook
+acknowledges completed allocation with HTTP 200 even when delivery fails. Stripe therefore does not
+automatically retry that email failure. Explicit event redelivery can retry delivery without
+reallocation; the admin resend endpoint below is available for deliberate retries.
 
 Use `POST /api/v1/admin/purchases/{public_id}/resend-email` to deliberately resend. Supply an
 `Idempotency-Key` header containing 8–100 letters, digits, `_`, or `-`. Reuse it when retrying the same
@@ -309,9 +320,11 @@ Public IDs contain 12 random characters from an unambiguous alphabet after `ORD-
 | `GET /health` | API/database/schema connectivity |
 | `GET /inventory/summary` | Counts per active exact price, optional municipality and insurance type |
 | `GET /inventory/municipalities` | Municipalities with eligible inventory |
+| `GET /checkout/config` | Safe payment mode (`test`, `live`, or `unconfigured`); no keys |
 | `POST /checkout` | Validate inventory, calculate total, create order and Stripe Checkout |
 | `GET /purchases/{public_id}` | Safe order status, quantity, money, timestamps; no buyer/lead PII |
 | `POST /webhooks/stripe` | Raw-body signature verification and idempotent payment handling |
+| `GET /admin/dashboard` | Active/eligible totals, all fulfilled order totals, latest eight purchases, latest sync, and active pricing rules |
 | `GET /admin/leads` | Filtered lead page with computed age/price/exclusion |
 | `GET /admin/pricing-rules` | Current rules |
 | `POST /admin/pricing-rules` | Create a rule while preserving valid active coverage |

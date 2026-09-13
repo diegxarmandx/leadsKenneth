@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
-import { PageIntro } from "@/components/page-intro";
+import { OrderStatus } from "@/components/marketplace/order-status";
 
-export const metadata: Metadata = { title: "Checkout returned", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Tu Orden" };
 
-export default function SuccessPage() {
+export default async function SuccessPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ order_id?: string | string[] }>;
+}) {
+  const query = await searchParams;
   return (
-    <PageIntro eyebrow="Checkout" title="Thanks for visiting LeadsPR.">
-      <p>Order status will appear here once the buyer flow is connected. This page does not confirm payment. Purchased leads are sent by email after payment and allocation are confirmed.</p>
-    </PageIntro>
+    <OrderStatus
+      publicId={typeof query.order_id === "string" ? query.order_id : undefined}
+    />
   );
 }

@@ -1,19 +1,38 @@
 import { apiRequest } from "@/lib/api";
-import type { CheckoutRequest, CheckoutResponse, InventorySummary, PublicPurchase } from "@/types/api";
+import type {
+  CheckoutConfig,
+  CheckoutRequest,
+  CheckoutResponse,
+  InventorySummary,
+  PublicPurchase,
+} from "@/types/api";
 
-export function getInventory(municipality?: string) {
+export function getInventory(municipality?: string, signal?: AbortSignal) {
   const query = municipality ? `?${new URLSearchParams({ municipality })}` : "";
-  return apiRequest<InventorySummary>(`/inventory/summary${query}`);
+  return apiRequest<InventorySummary>(`/inventory/summary${query}`, { signal });
 }
 
-export function getMunicipalities() {
-  return apiRequest<{ municipalities: string[] }>("/inventory/municipalities");
+export function getMunicipalities(signal?: AbortSignal) {
+  return apiRequest<{ municipalities: string[] }>("/inventory/municipalities", {
+    signal,
+  });
+}
+
+export function getCheckoutConfig(signal?: AbortSignal) {
+  return apiRequest<CheckoutConfig>("/checkout/config", { signal });
 }
 
 export function createCheckout(data: CheckoutRequest) {
-  return apiRequest<CheckoutResponse>("/checkout", { method: "POST", body: JSON.stringify(data) });
+  return apiRequest<CheckoutResponse>("/checkout", {
+    method: "POST",
+    body: JSON.stringify(data),
+    signal: AbortSignal.timeout(115_000),
+  });
 }
 
-export function getPurchase(publicId: string) {
-  return apiRequest<PublicPurchase>(`/purchases/${encodeURIComponent(publicId)}`);
+export function getPurchase(publicId: string, signal?: AbortSignal) {
+  return apiRequest<PublicPurchase>(
+    `/purchases/${encodeURIComponent(publicId)}`,
+    { signal },
+  );
 }

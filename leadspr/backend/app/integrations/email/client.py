@@ -1,5 +1,5 @@
-from typing import Protocol
 import logging
+from typing import Protocol
 
 import httpx
 

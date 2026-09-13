@@ -1,10 +1,10 @@
-# LeadsPR
+# LeadsPR — Borinquen Life & Protection
 
-Backend-first MVP for a Puerto Rico life insurance lead marketplace. Buyers check out as guests;
+An agency-branded MVP for a Puerto Rico life insurance lead marketplace. Buyers check out as guests;
 eligible leads are randomly allocated only after a verified Stripe payment and delivered by email.
 
 - [Backend setup, configuration, integrations, and operations](backend/README.md)
-- [Frontend scaffold](frontend/README.md)
+- [Frontend demo, local commands, presentation flow, and validation](frontend/README.md)
 
 ```text
 leadspr/
@@ -31,7 +31,7 @@ leadspr/
 │   └── README.md
 ├── frontend/
 │   ├── src/
-│   │   ├── app/{buy,admin,checkout/{success,cancel}}/
+│   │   ├── app/{leads,buy,admin,api,checkout/{success,cancel}}/
 │   │   ├── components/
 │   │   ├── lib/
 │   │   ├── types/
@@ -53,6 +53,8 @@ Implemented: the seven-table schema and migration; pricing and eligibility; Shee
 synchronization; scheduler; guest Checkout; signed webhook fulfillment; Resend delivery and retry;
 token-protected admin APIs; audit history; isolated tests. No fake leads are seeded.
 
-Frontend pages are intentional placeholders. There is no buyer form, live order-status UI, admin
-sign-in UI, or dashboard. Google, Stripe, and Resend adapters are implemented and tested with local
-fakes/mocks; live external operation requires your credentials and has not been verified.
+The frontend includes a branded homepage, live lead configurator, Stripe test checkout and order
+status, and a passcode-protected operations dashboard with real Sheets sync and editable backend-backed prices. The UI uses Puerto Rican Spanish and
+a cream/ivory theme with navy text. Prices, inventory,
+orders, and sync history come from the existing backend. The frontend guide records the verified
+Stripe test payment, lead assignment, Resend test delivery, and Google Sheets synchronization.

@@ -45,6 +45,15 @@ class Settings(BaseSettings):
     daily_sync_time: str = "02:00"
     scheduler_enabled: bool = True
 
+    @property
+    def payment_mode(self) -> Literal["test", "live", "unconfigured"]:
+        key = self.stripe_secret_key.get_secret_value()
+        if key.startswith(("sk_test_", "rk_test_")):
+            return "test"
+        if key.startswith(("sk_live_", "rk_live_")):
+            return "live"
+        return "unconfigured"
+
     _timezone = field_validator("app_timezone")(validate_timezone)
     _sync_time = field_validator("daily_sync_time")(validate_sync_time)
 

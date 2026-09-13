@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
-import { PageIntro } from "@/components/page-intro";
+import { Dashboard } from "@/components/operations/dashboard";
+import { hasAdminSession } from "@/lib/server/admin-session";
 
-export const metadata: Metadata = { title: "Admin", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Administración" };
 
-export default function AdminPage() {
-  return (
-    <PageIntro eyebrow="Administration" title="Your workspace is on its way.">
-      <p>The admin dashboard and sign-in experience are in development. This page contains no administrative data.</p>
-    </PageIntro>
-  );
+export default async function AdminPage() {
+  return <Dashboard initiallyAuthenticated={await hasAdminSession()} />;
 }
