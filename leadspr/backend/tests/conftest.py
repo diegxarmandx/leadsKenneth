@@ -28,11 +28,22 @@ class FakeSheets:
     def __init__(self):
         self.rows = []
         self.error = None
+        self.append_error = None
+        self.append_calls = []
 
     def fetch_rows(self, sheet_id, tab):
         if self.error:
             raise self.error
         return self.rows
+
+    def append_lead(self, sheet_id, tab, lead):
+        if self.append_error:
+            raise self.append_error
+        if any(row["external_id"] == lead.external_id for row in self.rows):
+            return False
+        self.append_calls.append((sheet_id, tab, lead))
+        self.rows.append(lead.model_dump(mode="json"))
+        return True
 
 
 class FakeStripe:

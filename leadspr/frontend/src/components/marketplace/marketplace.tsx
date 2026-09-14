@@ -42,51 +42,51 @@ export function Marketplace() {
 
   useEffect(() => {
     const controller = new AbortController();
-    Promise.all([
-      getInventory(municipality || undefined, controller.signal),
-      getMunicipalities(controller.signal),
-      getCheckoutConfig(controller.signal),
-    ])
-      .then(([data, places, payment]) => {
-        if (controller.signal.aborted) return;
-        const previous = data.tiers.find(
-          (tier) =>
-            tier.price_cents === selectedPrice.current &&
-            tier.available_quantity > 0,
-        );
-        const preferred = data.tiers.find(
-          (tier) =>
-            tier.age_ranges.some((range) => range.min_age_days === 8) &&
-            tier.available_quantity > 0,
-        );
-        const chosen =
-          previous ??
-          preferred ??
-          data.tiers.find((tier) => tier.available_quantity > 0);
-        selectedPrice.current = chosen?.price_cents ?? null;
-        setPrice(selectedPrice.current);
-        setQuantity((current) =>
-          chosen
-            ? String(
-                Math.min(
-                  Math.max(1, Number(current) || 1),
-                  chosen.available_quantity,
-                ),
-              )
-            : "1",
-        );
-        setInventory(data);
-        setMunicipalities(places.municipalities);
-        setConfig(payment);
-        setError("");
-        setLoading(false);
-      })
-      .catch((failure: unknown) => {
-        if (!controller.signal.aborted) {
-          setError(errorMessage(failure));
-          setLoading(false);
-        }
-      });
+    async function load() {
+      const [data, places, payment] = await Promise.all([
+        getInventory(municipality || undefined, controller.signal),
+        getMunicipalities(controller.signal),
+        getCheckoutConfig(controller.signal),
+      ]);
+      if (controller.signal.aborted) return;
+      const previous = data.tiers.find(
+        (tier) =>
+          tier.price_cents === selectedPrice.current &&
+          tier.available_quantity > 0,
+      );
+      const preferred = data.tiers.find(
+        (tier) =>
+          tier.age_ranges.some((range) => range.min_age_days === 8) &&
+          tier.available_quantity > 0,
+      );
+      const chosen =
+        previous ??
+        preferred ??
+        data.tiers.find((tier) => tier.available_quantity > 0);
+      selectedPrice.current = chosen?.price_cents ?? null;
+      setPrice(selectedPrice.current);
+      setQuantity((current) =>
+        chosen
+          ? String(
+              Math.min(
+                Math.max(1, Number(current) || 1),
+                chosen.available_quantity,
+              ),
+            )
+          : "1",
+      );
+      setInventory(data);
+      setMunicipalities(places.municipalities);
+      setConfig(payment);
+      setError("");
+      setLoading(false);
+    }
+    // Own the entire async chain, including processing the fetched data.
+    void load().catch((failure: unknown) => {
+      if (controller.signal.aborted) return;
+      setError(errorMessage(failure));
+      setLoading(false);
+    });
     return () => controller.abort();
   }, [municipality, refresh]);
 

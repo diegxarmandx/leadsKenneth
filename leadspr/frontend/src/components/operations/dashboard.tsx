@@ -14,6 +14,7 @@ import { DemoBadge, Notice, Spinner } from "@/components/ui";
 import { AdminSignIn } from "@/components/operations/admin-sign-in";
 import { RecentOrders } from "@/components/operations/recent-orders";
 import { SheetsSyncCard } from "@/components/operations/sheets-sync-card";
+import { AddLead } from "@/components/operations/add-lead";
 import { PricingRules } from "@/components/operations/pricing-rules";
 import { getDashboard, signOut, syncSheet } from "@/services/operations";
 import { ApiError, errorMessage } from "@/lib/api";
@@ -29,6 +30,7 @@ export function Dashboard({
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [adding, setAdding] = useState(false);
   const [error, setError] = useState("");
   const [feedback, setFeedback] = useState<{
     message: string;
@@ -175,7 +177,7 @@ export function Dashboard({
                 className="icon-button"
                 onClick={logout}
                 aria-label="Cerrar sesión"
-                disabled={syncing}
+                disabled={syncing || adding}
               >
                 <LogOut size={18} aria-hidden="true" />
               </button>
@@ -202,7 +204,7 @@ export function Dashboard({
               <button
                 type="button"
                 className="text-button"
-                disabled={loading || syncing}
+                disabled={loading || syncing || adding}
                 onClick={() => {
                   setLoading(true);
                   void load();
@@ -286,6 +288,12 @@ export function Dashboard({
                         Disponibilidad actual en Puerto Rico
                       </span>
                     </div>
+                    <AddLead
+                      today={data.inventory.business_date}
+                      disabled={syncing || loading}
+                      onBusyChange={setAdding}
+                      onSaved={load}
+                    />
                     <div className="inventory-grid">
                       {data.inventory.tiers.map((tier) => {
                         const info = tierPresentation(tier);
@@ -318,13 +326,13 @@ export function Dashboard({
                     <SheetsSyncCard
                       run={data.last_sync}
                       syncing={syncing}
-                      refreshing={loading}
+                      refreshing={loading || adding}
                       onSync={sync}
                     />
                   </div>
                   <PricingRules
                     rules={data.pricing_rules}
-                    disabled={syncing || loading}
+                    disabled={syncing || loading || adding}
                     onSaved={async (rule) => {
                       setData((current) =>
                         current

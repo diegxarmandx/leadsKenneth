@@ -766,7 +766,7 @@ input::placeholder {
   padding-top: 18px;
 }
 .location-caption strong {
-  color: #556b84;
+  color: var(--card-on-surface);
   font-weight: 600;
 }
 .mini-icon {
@@ -1148,7 +1148,7 @@ input::placeholder {
 .summary-delivery strong {
   font-size: 13px;
   font-weight: 650;
-  color: #5c708a;
+  color: var(--card-on-surface);
 }
 .summary-delivery p {
   font-size: 13px;
@@ -2569,9 +2569,12 @@ input::placeholder {
   color: #647080;
   opacity: 1;
 }
+.field input,
+.quantity-input input,
 .select-wrap select,
 .select-wrap select option {
   color: #182c43;
+  caret-color: #182c43;
   background: #fffdf8;
 }
 .section-title h2,
@@ -2860,5 +2863,91 @@ input::placeholder {
   }
   .inventory-card .availability {
     font-size: 12px;
+  }
+}
+
+/* Admin single-lead entry uses the existing navy surface and light fields. */
+.button-gold {
+  background: #e5bf75;
+  border-color: #e5bf75;
+  color: #10233f;
+}
+.button-gold:hover:not(:disabled) {
+  background: #f4d597;
+  border-color: #f4d597;
+}
+.button-gold:focus-visible {
+  outline-color: #b88a3b;
+}
+.lead-entry {
+  margin-bottom: 20px;
+}
+.lead-entry-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+.lead-entry-panel {
+  padding: 24px;
+}
+.lead-entry-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.lead-entry-heading h3 {
+  color: var(--card-on-surface);
+  font-size: 20px;
+}
+.lead-entry-heading p {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 4px;
+}
+.lead-entry-insurance {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #e5bf75;
+  white-space: nowrap;
+  font-size: 14px;
+}
+.lead-entry-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.lead-entry-fields .field-error {
+  color: #ffb8b0;
+}
+.lead-entry-fields input,
+.lead-entry-fields select {
+  min-height: 46px;
+  min-width: 0;
+  color-scheme: light;
+}
+.lead-entry-fields select {
+  padding-left: 12px;
+}
+.lead-entry-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+.lead-entry-actions .button-text:hover {
+  background: #1a3454;
+}
+@media (max-width: 600px) {
+  .lead-entry-panel {
+    padding: 20px;
+  }
+  .lead-entry-heading {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .lead-entry-fields {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

@@ -24,7 +24,7 @@ export function OrderStatus({ publicId }: { publicId?: string }) {
 
   useEffect(() => {
     const controller = new AbortController();
-    let timer: ReturnType<typeof setTimeout>;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     let attempts = 0;
     let id = publicId;
     if (!id) {
@@ -35,6 +35,7 @@ export function OrderStatus({ publicId }: { publicId?: string }) {
       }
     }
     async function poll() {
+      if (controller.signal.aborted) return;
       if (!id || !/^ORD-[A-Z0-9-]{6,40}$/.test(id)) {
         setError(
           "No pudimos identificar esta orden. Revisa el enlace en tu correo o visita Administración.",
@@ -42,28 +43,29 @@ export function OrderStatus({ publicId }: { publicId?: string }) {
         setLoading(false);
         return;
       }
-      try {
-        const result = await getPurchase(id, controller.signal);
-        if (controller.signal.aborted) return;
-        setOrder(result);
-        setError("");
-        setLoading(false);
-        const waiting =
-          result.status === "PENDING" ||
-          result.status === "PAID" ||
-          (result.status === "FULFILLED" && !result.email_sent_at);
-        if (waiting && ++attempts < 60) timer = setTimeout(poll, 2000);
-      } catch (failure) {
-        if (!controller.signal.aborted) {
-          setError(errorMessage(failure));
-          setLoading(false);
-        }
-      }
+      const result = await getPurchase(id, controller.signal);
+      if (controller.signal.aborted) return;
+      setOrder(result);
+      setError("");
+      setLoading(false);
+      const waiting =
+        result.status === "PENDING" ||
+        result.status === "PAID" ||
+        (result.status === "FULFILLED" && !result.email_sent_at);
+      if (waiting && ++attempts < 60) timer = setTimeout(runPoll, 2000);
     }
-    void poll();
+    function runPoll() {
+      // Timers do not consume returned promises; handle every poll explicitly.
+      void poll().catch((failure: unknown) => {
+        if (controller.signal.aborted) return;
+        setError(errorMessage(failure));
+        setLoading(false);
+      });
+    }
+    runPoll();
     return () => {
-      controller.abort();
       clearTimeout(timer);
+      controller.abort();
     };
   }, [publicId, refresh]);
 

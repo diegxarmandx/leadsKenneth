@@ -22,7 +22,10 @@ export default defineConfig({
       reuseExistingServer: false,
     },
     {
-      command: "npm start -- --hostname 127.0.0.1 --port 4318",
+      command: process.env.PLAYWRIGHT_DEV_SERVER
+        ? "npm run dev -- --hostname 127.0.0.1 --port 4318"
+        : "npm start -- --hostname 127.0.0.1 --port 4318",
+      stdout: "pipe",
       url: "http://localhost:4318",
       reuseExistingServer: false,
       env: {

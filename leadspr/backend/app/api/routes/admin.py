@@ -1,4 +1,5 @@
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, Header, Query
 from pydantic import AwareDatetime
@@ -9,6 +10,7 @@ from app.models import PricingRule, SyncRun
 from app.models.enums import PurchaseStatus
 from app.repositories.sync_repository import SyncRepository
 from app.schemas.admin import SyncRunResponse
+from app.schemas.lead_entry import LeadEntryInput, LeadEntryResponse
 from app.schemas.pricing import (
     PricingRuleInput,
     PricingRulePatch,
@@ -16,6 +18,7 @@ from app.schemas.pricing import (
     PricingRuleUpdate,
 )
 from app.services.admin_service import AdminService
+from app.services.lead_entry_service import LeadEntryService
 from app.services.pricing_service import PricingService
 from app.services.settings_service import SettingsService
 
@@ -51,6 +54,17 @@ def leads(
         price_cents=price_cents,
         min_age_days=min_age_days,
         max_age_days=max_age_days,
+    )
+
+
+@router.post("/leads", response_model=LeadEntryResponse, status_code=201)
+def create_lead(
+    data: LeadEntryInput,
+    runtime: RuntimeDep,
+    idempotency_key: Annotated[UUID, Header()],
+) -> LeadEntryResponse:
+    return LeadEntryService(runtime.sessions, runtime.config, runtime.sheets).create(
+        data, idempotency_key
     )
 
 

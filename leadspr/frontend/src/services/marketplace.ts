@@ -12,10 +12,16 @@ export function getInventory(municipality?: string, signal?: AbortSignal) {
   return apiRequest<InventorySummary>(`/inventory/summary${query}`, { signal });
 }
 
-export function getMunicipalities(signal?: AbortSignal) {
-  return apiRequest<{ municipalities: string[] }>("/inventory/municipalities", {
-    signal,
-  });
+export function getMunicipalities(
+  signal?: AbortSignal,
+  scope: "eligible" | "all" = "eligible",
+) {
+  return apiRequest<{ municipalities: string[] }>(
+    `/inventory/municipalities${scope === "all" ? "?scope=all" : ""}`,
+    {
+      signal,
+    },
+  );
 }
 
 export function getCheckoutConfig(signal?: AbortSignal) {

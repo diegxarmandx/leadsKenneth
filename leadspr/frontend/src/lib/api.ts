@@ -37,7 +37,12 @@ export async function requestJson<T>(
       "No pudimos conectar con el servicio. Revisa tu conexión e intenta nuevamente.",
     );
   }
-  const body: unknown = await response.json().catch(() => null);
+  const body: unknown = await response.json().catch((error: unknown) => {
+    // A response can be cancelled after headers arrive, while reading its body.
+    // Let the owning effect handle cancellation and genuine stream failures.
+    if (error instanceof SyntaxError) return null;
+    throw error;
+  });
   if (!response.ok) {
     const error =
       body && typeof body === "object" && "error" in body ? body.error : null;

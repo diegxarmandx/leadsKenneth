@@ -86,3 +86,20 @@ export type DashboardData = {
   pricing_rules: PricingRule[];
   payment_mode: CheckoutConfig["payment_mode"];
 };
+
+export type LeadEntryInput = {
+  first_name: string;
+  last_name: string | null;
+  phone: string;
+  email: string | null;
+  municipality: string;
+  lead_date: string;
+};
+export type LeadEntryResponse = {
+  external_id: string;
+  sheet_written: true;
+  appended: boolean;
+  status: "synced" | "sync_pending";
+  available: boolean;
+  sync_run: SyncRun | null;
+};

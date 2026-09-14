@@ -14,6 +14,9 @@ function reset() {
   state = {
     mode: "test",
     inventoryError: false,
+    inventoryDelay: 0,
+    purchaseDelay: 0,
+    purchaseError: false,
     syncError: false,
     checkoutError: false,
     checkoutDelay: 0,
@@ -24,6 +27,11 @@ function reset() {
     active: 20,
     prices: rules.map((rule) => rule[2]),
     pricingError: false,
+    leadMode: "success",
+    leadDelay: 0,
+    leadRequests: 0,
+    leadRows: [],
+    syncedLeadCount: 0,
   };
 }
 reset();
@@ -40,7 +48,8 @@ function inventory(municipality) {
     tiers: rules.map(([min, max], index) => ({
       price_cents: state.prices[index],
       available_quantity:
-        quantities[index] + (index === 0 ? state.syncCount : 0),
+        quantities[index] +
+        (index === 0 ? state.syncCount + state.syncedLeadCount : 0),
       age_ranges: [{ min_age_days: min, max_age_days: max }],
     })),
   };
@@ -127,6 +136,7 @@ createServer(async (req, res) => {
   if (url.pathname === "/api/v1/inventory/municipalities")
     return send({ municipalities: ["Salinas", "San Juan", "Bayamón"] });
   if (url.pathname === "/api/v1/inventory/summary") {
+    if (state.inventoryDelay) await delay(state.inventoryDelay);
     if (state.inventoryError)
       return fail("Inventory is temporarily unavailable.");
     return send(inventory(url.searchParams.get("municipality")));
@@ -146,6 +156,34 @@ createServer(async (req, res) => {
       201,
     );
   }
+  if (url.pathname === "/api/v1/admin/leads" && req.method === "POST") {
+    state.leadRequests += 1;
+    if (state.leadDelay) await delay(state.leadDelay);
+    if (state.leadMode === "write_error")
+      return send({ error: { code: "sheet_write_failed" } }, 502);
+    const key = req.headers["idempotency-key"];
+    let row = state.leadRows.find((entry) => entry.key === key);
+    const appended = !row;
+    if (!row) {
+      row = { key, ...data };
+      state.leadRows.push(row);
+    }
+    if (state.leadMode === "success") {
+      state.active += state.leadRows.length - state.syncedLeadCount;
+      state.syncedLeadCount = state.leadRows.length;
+    }
+    return send(
+      {
+        external_id: "LEAD-" + key.replaceAll("-", "").toUpperCase(),
+        sheet_written: true,
+        appended,
+        status: state.leadMode === "success" ? "synced" : "sync_pending",
+        available: state.leadMode === "success",
+        sync_run: syncRun(),
+      },
+      201,
+    );
+  }
   if (url.pathname === "/api/v1/admin/dashboard") return send(dashboard());
   if (
     /^\/api\/v1\/admin\/pricing-rules\/[1-4]$/.test(url.pathname) &&
@@ -160,10 +198,13 @@ createServer(async (req, res) => {
     if (state.syncError)
       return fail("Google Sheets could not be reached.", 502);
     state.syncCount += 1;
-    state.active += 1;
+    state.active += 1 + state.leadRows.length - state.syncedLeadCount;
+    state.syncedLeadCount = state.leadRows.length;
     return send(syncRun());
   }
-  if (url.pathname === "/api/v1/purchases/ORD-TEST0002")
+  if (url.pathname === "/api/v1/purchases/ORD-TEST0002") {
+    if (state.purchaseDelay) await delay(state.purchaseDelay);
+    if (state.purchaseError) return fail("Order service is unavailable.");
     return send({
       public_id: "ORD-TEST0002",
       status: state.orderStatus,
@@ -178,5 +219,6 @@ createServer(async (req, res) => {
       fulfilled_at: null,
       email_sent_at: state.orderStatus === "FULFILLED" ? timestamp : null,
     });
+  }
   return fail("Not found", 404);
 }).listen(4319, "127.0.0.1");

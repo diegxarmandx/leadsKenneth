@@ -158,7 +158,7 @@ prices: the existing fulfillment service rechecks current pricing and eligibilit
 1. Create or choose a Google Cloud project and enable **Google Sheets API**.
 2. Create a service account in that project and create its JSON key. This service does not need
    Google Workspace domain-wide delegation. Keep the downloaded key outside the repository.
-3. Open the spreadsheet and share it with the key's `client_email` address as a **Viewer**.
+3. Open the spreadsheet and share it with the key's `client_email` address as an **Editor** to enable admin lead entry (Viewer remains sufficient for sync only).
 4. Put canonical headers in row 1. Required: `external_id`, `lead_date`, `first_name`, `phone`.
    Optional: `last_name`, `email`, `municipality`, `insurance_type`, `source`, `campaign`,
    `language`, `notes`. Header whitespace/case is normalized; field names use underscores.
@@ -177,8 +177,30 @@ prices: the existing fulfillment service rechecks current pricing and eligibilit
 9. In `/docs`, authorize with `ADMIN_API_TOKEN`, invoke `POST /api/v1/admin/sync`, then inspect
    `/api/v1/admin/sync-runs`, `/api/v1/admin/leads`, and the public inventory summary.
 
-The adapter uses the [read-only Sheets scope](https://developers.google.com/workspace/sheets/api/scopes).
-It reads the complete configured tab, including rows hidden by UI filters. It does not write to Sheets.
+Synchronization uses the read-only Sheets scope and reads the complete configured tab, including rows hidden by UI filters. Admin lead entry uses the `spreadsheets` write scope with the same service account and configured worksheet. Both scopes are documented in [Google Sheets API scopes](https://developers.google.com/workspace/sheets/api/scopes).
+
+### Add one lead from admin
+
+`POST /api/v1/admin/leads` requires the existing admin bearer token and a UUID `Idempotency-Key` header.
+Accepts `first_name`, optional `last_name`, `phone`, optional `email`, `municipality`, and ISO `lead_date`.
+Unknown fields are rejected. Municipality is checked against the shared Puerto Rico catalog exposed by
+`GET /inventory/municipalities?scope=all`; the default endpoint continues to list eligible inventory only.
+
+The service generates `LEAD-<uppercase UUID hex>`, checks the actual sheet for that ID, and appends using
+its current normalized header order with `RAW` values and no automatic append retries. The unused `id`
+column stays blank; `insurance_type=Life Insurance`, `source=Admin`, `language=es`, and blank campaign
+are system-managed. Dates and phones remain strings, preserving leading zeros and `+`. No lead is
+written directly to SQLite: the existing `LeadSyncService.sync(manual=True)` imports the appended row.
+
+A 201 response includes `external_id`, `sheet_written`, `appended`, `status` (`synced` or `sync_pending`),
+`available`, and `sync_run`. A pending sync is a confirmed Sheet write: use Sync Now, not another new
+submission. Retrying with the same key checks for the existing row and never blindly appends it again.
+A key reused with conflicting contact data returns 409. An uncertain write returns 502 with a safe
+Spanish message; retry the same request/key to check whether Google accepted it.
+
+A local file lock serializes lead entry across processes sharing this SQLite database. Multiple hosts
+would require a distributed lock before deploying concurrent writers. Do not rearrange Sheet headers
+while someone is submitting a lead. Full acceptance steps are in [the add-lead checklist](../docs/add-lead-acceptance.md).
 
 Every attempt creates a sync run, including missing credentials, overlapping runs, and upstream
 failures. Blank insurance types become `Life Insurance`. Future dates may be synchronized but are

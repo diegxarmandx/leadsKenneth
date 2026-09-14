@@ -22,7 +22,7 @@ export async function GET(request: Request, context: Context) {
       throw new BackendError(404, "not_found", "Página no encontrada.");
     const query = new URLSearchParams();
     const input = new URL(request.url).searchParams;
-    for (const key of ["municipality", "insurance_type"]) {
+    for (const key of ["municipality", "insurance_type", "scope"]) {
       const value = input.get(key);
       if (value) query.set(key, value);
     }

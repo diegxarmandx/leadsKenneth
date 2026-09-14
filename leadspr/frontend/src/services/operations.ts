@@ -1,5 +1,11 @@
 import { requestJson } from "@/lib/api";
-import type { DashboardData, PricingRule, SyncRun } from "@/types/api";
+import type {
+  DashboardData,
+  PricingRule,
+  SyncRun,
+  LeadEntryInput,
+  LeadEntryResponse,
+} from "@/types/api";
 
 export const updatePrice = (id: number, price_cents: number) =>
   requestJson<PricingRule>(`/api/operations/pricing-rules/${id}`, {
@@ -22,4 +28,12 @@ export const signIn = (passcode: string) =>
 export const signOut = () =>
   requestJson<{ authenticated: boolean }>("/api/operations/session", {
     method: "DELETE",
+  });
+
+export const addLead = (data: LeadEntryInput, requestId: string) =>
+  requestJson<LeadEntryResponse>("/api/operations/leads", {
+    method: "POST",
+    headers: { "Idempotency-Key": requestId },
+    body: JSON.stringify(data),
+    signal: AbortSignal.timeout(180_000),
   });

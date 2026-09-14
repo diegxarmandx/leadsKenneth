@@ -1,8 +1,9 @@
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Query
 
 from app.api.dependencies.runtime import RuntimeDep, SessionDep
+from app.data.municipalities import MUNICIPALITIES
 from app.schemas.purchase import InsuranceType
 from app.services.inventory_service import InventoryService
 
@@ -24,7 +25,10 @@ def municipalities(
     session: SessionDep,
     runtime: RuntimeDep,
     insurance_type: InsuranceType = "Life Insurance",
+    scope: Literal["eligible", "all"] = "eligible",
 ) -> dict:
+    if scope == "all":
+        return {"municipalities": list(MUNICIPALITIES)}
     return {
         "municipalities": InventoryService(session, runtime.config).municipalities(insurance_type)
     }

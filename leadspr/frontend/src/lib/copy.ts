@@ -1,5 +1,11 @@
 // Presentation-only Spanish copy. Backend codes and domain values stay unchanged.
 const errors: Record<string, string> = {
+  sheet_write_failed:
+    "No se pudo confirmar el lead en Google Sheets. Reintenta este mismo envío; se comprobará si ya existe.",
+  lead_identity_conflict:
+    "Este envío ya existe con otros datos. Revisa la hoja antes de añadir otro lead.",
+  lead_entry_busy: "Ya se está añadiendo un lead. Espera e intenta nuevamente.",
+  invalid_lead: "Revisa los datos del lead e intenta nuevamente.",
   insufficient_inventory:
     "No hay suficientes leads disponibles para completar esta cantidad. Actualizamos el inventario; revisa tu selección.",
   pricing_rule_not_found:
@@ -33,6 +39,10 @@ export function apiErrorCopy(
 ): string {
   if (errors[code]) return errors[code];
   if (status === 401) return errors.session_expired;
+  if (path.endsWith("/operations/leads"))
+    return status === 422
+      ? "Revisa el nombre, teléfono, correo, municipio y fecha del lead."
+      : "No se pudo confirmar el envío. Reintenta desde este formulario para comprobar si el lead ya se guardó.";
   if (path.includes("pricing-rules"))
     return status === 422
       ? errors.invalid_price

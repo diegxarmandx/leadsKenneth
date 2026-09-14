@@ -202,3 +202,19 @@ Homepage photograph by Hoi An and Da Nang Photographer,
 [family walking in a park](https://unsplash.com/photos/a-family-walks-hand-in-hand-on-a-park-path-pXsOE_VcZkc),
 used under the Unsplash license. The locally hosted Manrope and Libre Baskerville font packages
 include their open-source licenses.
+
+
+### Añadir Lead
+
+The admin inventory section now includes an expandable `AddLead` form. It posts through the authenticated,
+same-origin `/api/operations/leads` proxy to `POST /api/v1/admin/leads`. Google credentials stay on the
+backend. The form validates required fields, optional email, phone, municipality, and date; it keeps one
+UUID retry key per open draft and blocks repeated submissions. Full success closes/resets the form and
+refreshes the dashboard. Confirmed Sheet writes with failed sync show a separate Spanish notice directing
+the admin to **Sincronizar Ahora**. Write failures preserve the draft and retry key.
+
+The municipality dropdown reuses the marketplace municipality service with `scope=all`. The shared
+backend catalog is based on [US Census Puerto Rico municipios](https://tigerweb.geo.census.gov/tigerwebmain/Files/acs26/tigerweb_acs26_county_pr.html), since eligible inventory alone cannot provide locations for first-time lead entry.
+
+Tests: `tests/e2e/add-lead.spec.ts`; run `npm run test:e2e`. See the
+[manual acceptance checklist](../docs/add-lead-acceptance.md) for real Google Sheets verification.
