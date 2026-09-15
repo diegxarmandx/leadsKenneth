@@ -49,9 +49,7 @@ export function AdminSignIn({
           <br />
           Todo en un solo lugar.
         </p>
-        <span className="sign-in-footnote">
-          Borinquen Life &amp; Protection
-        </span>
+        <span className="sign-in-footnote">FSG Seguros</span>
       </div>
       <form
         onSubmit={submit}

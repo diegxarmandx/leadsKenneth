@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
-import { Brand } from "@/components/brand";
+import { company } from "@/lib/company";
 
 export function Footer() {
   return (
@@ -8,31 +7,49 @@ export function Footer() {
       <div className="container">
         <div className="footer-main">
           <div>
-            <Brand />
-            <p>Cobertura para Hoy. Protección para Mañana.</p>
+            <Link
+              href="/"
+              className="footer-brand"
+              aria-label={`${company.name} — Inicio`}
+            >
+              <span className="footer-brand-name">{company.name}</span>
+              <span className="footer-brand-description">
+                {company.legalName}
+              </span>
+            </Link>
+            <p>Orientación en seguros para tu familia y tu futuro.</p>
           </div>
           <div className="footer-links">
             <Link href="/">Inicio</Link>
             <Link href="/leads">Leads para Agentes</Link>
             <Link href="/admin">Administración</Link>
           </div>
-          <div className="footer-note">
-            <ShieldCheck size={20} aria-hidden="true" />
-            <span>
-              Por las familias.
-              <br />
-              Por el futuro. Por Puerto Rico.
-            </span>
-          </div>
+          <address className="footer-contact">
+            <a href={company.phoneHref}>{company.phone}</a>
+            <a href={`mailto:${company.email}`}>{company.email}</a>
+            <div className="footer-social">
+              <a
+                href={company.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Facebook
+              </a>
+              <a
+                href={company.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Instagram
+              </a>
+            </div>
+          </address>
         </div>
         <div className="footer-bottom">
           <span>
-            © {new Date().getFullYear()} Borinquen Life &amp; Protection
+            © {new Date().getFullYear()} {company.legalName}
           </span>
-          <span>
-            Ambiente de demostración — todos los leads y las transacciones
-            mostradas son simulados.
-          </span>
+          <span>Marketplace en modo demo: leads y pagos de prueba.</span>
         </div>
       </div>
     </footer>

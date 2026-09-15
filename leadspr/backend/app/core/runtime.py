@@ -6,6 +6,7 @@ from app.core.config import Settings
 from app.integrations.email.client import EmailClient
 from app.integrations.google_sheets.client import SheetClient
 from app.integrations.stripe.client import CheckoutClient
+from app.services.checkout_reconciliation_service import CheckoutReconciliationService
 from app.services.email_service import EmailService
 from app.services.fulfillment_service import FulfillmentService
 from app.services.lead_sync_service import LeadSyncService
@@ -29,6 +30,9 @@ class Runtime:
 
     def email(self) -> EmailService:
         return EmailService(self.sessions, self.config, self.email_client)
+
+    def reconciliation(self) -> CheckoutReconciliationService:
+        return CheckoutReconciliationService(self.sessions, self.config, self.stripe, self.email())
 
     def webhooks(self) -> WebhookService:
         return WebhookService(

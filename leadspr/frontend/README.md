@@ -1,4 +1,4 @@
-# Borinquen Life & Protection — demo frontend
+# FSG Seguros — demo frontend
 
 A responsive Next.js App Router / TypeScript frontend for the existing LeadsPR FastAPI backend.
 The homepage, agent marketplace, operations dashboard, and checkout return pages share navy,
@@ -132,7 +132,7 @@ No internationalization framework or new runtime dependency was added for this u
 
 ## Presentation flow
 
-1. Open `/`, use **Explorar Leads para Agentes**, and choose a municipality.
+1. Open `/`, use **Ver Leads Disponibles**, and choose a municipality.
 2. Select an available tier, enter a quantity and demo buyer details, and check the total.
 3. Open secure checkout. Use Stripe's test card `4242 4242 4242 4242`, a future expiry, and any CVC.
    Use `delivered@resend.dev` to exercise Resend's delivery test sink, or an allowed inbox you control.
@@ -163,7 +163,7 @@ Verified locally on September 13, 2026:
 
 For Monday, keep FastAPI, Next.js, and the Stripe listener running, with internet access to Stripe,
 Google, and Resend. Salinas currently has one Recent lead left after verification: choose Todo Puerto
-Rico for a larger order, or add valid test rows and sync. Stripe Checkout uses Latin American Spanish and the Borinquen product name; the existing
+Rico for a larger order, or add valid test rows and sync. Stripe Checkout uses Latin American Spanish and the FSG product name; the existing
 sandbox account name and provider-owned identity disclosure remain controlled by Stripe. Inventory is not reserved during checkout; the return page clearly
 flags a paid order whose full quantity is no longer available.
 
@@ -218,3 +218,9 @@ backend catalog is based on [US Census Puerto Rico municipios](https://tigerweb.
 
 Tests: `tests/e2e/add-lead.spec.ts`; run `npm run test:e2e`. See the
 [manual acceptance checklist](../docs/add-lead-acceptance.md) for real Google Sheets verification.
+
+### Recuperación del checkout
+
+La página de estado conserva GET como consulta y usa `POST /api/marketplace/purchases/{public_id}/refresh` cuando falta confirmar el pago o el correo. El proxy exige el mismo origen y no reenvía datos de pago aportados por el navegador. El backend recupera la sesión de Stripe guardada, valida su referencia y reutiliza la asignación y el correo idempotentes. Las consultas aumentan su intervalo y se detienen al terminar o tras 12 intentos, mostrando cómo continuar.
+
+Con `SCHEDULER_ENABLED=true`, el backend recupera hasta 10 órdenes pendientes de los últimos siete días cada minuto, incluso si se cerró el navegador. Mantener los webhooks de Stripe configurados como vía principal; la recuperación es un respaldo para eventos ausentes o envíos fallidos. No hace falta volver a pagar una orden pendiente.

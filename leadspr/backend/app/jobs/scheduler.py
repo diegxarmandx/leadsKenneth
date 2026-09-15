@@ -32,6 +32,14 @@ class SyncScheduler:
         try:
             self.refresh()
             self.scheduler.add_job(
+                self.runtime.reconciliation().recover_pending,
+                "interval",
+                seconds=60,
+                id="recover-checkout-orders",
+                max_instances=1,
+                coalesce=True,
+            )
+            self.scheduler.add_job(
                 self.refresh,
                 "interval",
                 seconds=60,

@@ -2,10 +2,10 @@
 
 :root {
   color-scheme: light;
-  --navy: #10233f;
-  --navy-deep: #10233f;
-  --blue: #1e5aa8;
-  --blue-hover: #194d8d;
+  --navy: #203c2a;
+  --navy-deep: #183525;
+  --blue: #365c28;
+  --blue-hover: #27481e;
   --gold: #b88a3b;
   --ink: #182c43;
   --muted: #4f5d6c;
@@ -524,6 +524,25 @@ fieldset {
   background: var(--card);
   border-top: 1px solid var(--line);
 }
+.footer-brand {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 14px;
+  border-left: 3px solid var(--gold);
+  color: var(--navy);
+}
+.footer-brand-name {
+  font-size: 25px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+}
+.footer-brand-description {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
 .footer-main {
   display: flex;
   justify-content: space-between;
@@ -550,7 +569,9 @@ fieldset {
 }
 .footer-links {
   display: flex;
-  gap: 23px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
   font-size: 13px;
   color: #56677a;
 }
@@ -2949,5 +2970,87 @@ input::placeholder {
   }
   .lead-entry-fields {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* FSG identity: cream and forest green, with navy operational cards. */
+.brand-name,
+.footer-main .brand-name {
+  font-family: var(--font-body);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.06em;
+}
+.brand-name > span {
+  font-weight: 500;
+  letter-spacing: -0.04em;
+}
+.brand-descriptor,
+.footer-main .brand-descriptor {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: #4f5d50;
+}
+.brand-light .brand-descriptor {
+  color: white;
+}
+.footer-contact {
+  display: grid;
+  gap: 5px;
+  font-style: normal;
+  font-size: 13px;
+}
+.footer-contact a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.footer-social {
+  display: flex;
+  gap: 18px;
+  margin-top: 7px;
+}
+.footer-social a {
+  min-height: 30px;
+}
+.footer-main {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.footer-bottom {
+  border-color: var(--line);
+}
+@media (max-width: 600px) {
+  .brand-name {
+    font-size: 25px;
+  }
+  .brand-descriptor {
+    font-size: 8px;
+  }
+  .footer-main {
+    gap: 25px;
+  }
+}
+
+/* The supplied square logo includes white margins. Fit only those margins out
+   of the layout; the complete symbol and wordmark remain visible. */
+.brand-logo {
+  display: block;
+  width: 180px;
+  height: 112px;
+  object-fit: cover;
+  object-position: center;
+  mix-blend-mode: multiply;
+}
+.brand-light .brand-logo {
+  mix-blend-mode: normal;
+  border-radius: 4px;
+}
+.nav-inner {
+  padding-block: 8px;
+}
+@media (max-width: 600px) {
+  .brand-logo {
+    width: 160px;
+    height: 100px;
   }
 }

@@ -34,7 +34,7 @@ def test_stripe_checkout_adapter_builds_server_owned_amounts(env, add_lead, monk
     assert params["line_items"][0]["quantity"] == 2
     assert params["locale"] == "es-419"
     assert params["line_items"][0]["price_data"]["product_data"]["name"] == (
-        "Borinquen Life & Protection · Leads de seguro de vida"
+        "FSG Seguros · Leads de seguro de vida"
     )
     assert params["metadata"] == {"purchase_public_id": purchase.public_id}
     assert purchase.public_id in params["success_url"]
@@ -98,3 +98,22 @@ def test_google_adapter_uses_readonly_scope_and_quoted_tab(env, monkeypatch):
         "https://www.googleapis.com/auth/spreadsheets.readonly"
     ]
     assert service.spreadsheets().values().get.call_args.kwargs["range"] == "'Provider''s Leads'"
+
+
+def test_stripe_retrieval_uses_stored_session_and_reports_failure(env, monkeypatch):
+    retrieve = MagicMock(
+        return_value=SimpleNamespace(to_dict=lambda: {"id": "cs_owned", "payment_status": "paid"})
+    )
+    sdk = SimpleNamespace(
+        v1=SimpleNamespace(checkout=SimpleNamespace(sessions=SimpleNamespace(retrieve=retrieve)))
+    )
+    monkeypatch.setattr(
+        "app.integrations.stripe.client.stripe.StripeClient", MagicMock(return_value=sdk)
+    )
+    config = env.config.model_copy(update={"stripe_secret_key": SecretStr("sk_test_contract")})
+    client = StripeClient(config)
+    assert client.retrieve_checkout("cs_owned")["payment_status"] == "paid"
+    retrieve.assert_called_once_with("cs_owned")
+    retrieve.side_effect = RuntimeError("provider error")
+    with pytest.raises(IntegrationError):
+        client.retrieve_checkout("cs_owned")

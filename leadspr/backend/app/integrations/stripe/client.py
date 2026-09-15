@@ -20,6 +20,7 @@ class CheckoutSession:
 
 class CheckoutClient(Protocol):
     def create_checkout(self, purchase: Purchase) -> CheckoutSession: ...
+    def retrieve_checkout(self, checkout_id: str) -> dict: ...
     def verify_event(self, payload: bytes, signature: str) -> dict: ...
 
 
@@ -56,9 +57,7 @@ class StripeClient:
                             "price_data": {
                                 "currency": "usd",
                                 "unit_amount": purchase.price_per_lead_cents,
-                                "product_data": {
-                                    "name": "Borinquen Life & Protection · Leads de seguro de vida"
-                                },
+                                "product_data": {"name": "FSG Seguros · Leads de seguro de vida"},
                             },
                         }
                     ],
@@ -78,6 +77,21 @@ class StripeClient:
         except Exception as exc:
             logger.exception("Stripe Checkout API error: %s", exc)
             raise IntegrationError("Unable to create Stripe Checkout; try again later") from exc
+
+    def retrieve_checkout(self, checkout_id: str) -> dict:
+        key = self.config.stripe_secret_key.get_secret_value()
+        if not key:
+            raise ConfigurationError("Configure STRIPE_SECRET_KEY before verifying payment")
+        try:
+            client = stripe.StripeClient(
+                key, max_network_retries=0, http_client=stripe.RequestsClient(timeout=15)
+            )
+            return client.v1.checkout.sessions.retrieve(checkout_id).to_dict()
+        except Exception as exc:
+            logger.error("Stripe payment verification failed: %s", type(exc).__name__)
+            raise IntegrationError(
+                "No se pudo verificar el pago con Stripe. Intenta nuevamente."
+            ) from exc
 
     def verify_event(self, payload: bytes, signature: str) -> dict:
         secret = self.config.stripe_webhook_secret.get_secret_value()

@@ -53,6 +53,7 @@ def test_scheduler_lock_refresh_and_cross_thread_shutdown(env):
         second.start()
         assert first.owner and not second.owner
         assert first.scheduler.get_job("daily-lead-sync") is not None
+        assert first.scheduler.get_job("recover-checkout-orders") is not None
         with write_session(env.factory) as session:
             SettingsService(session, env.config).update(
                 {"daily_sync_time": "04:15", "timezone": "UTC"}

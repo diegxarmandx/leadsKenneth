@@ -1,10 +1,11 @@
 import logging
+import re
 from typing import Protocol
 
 import httpx
 
 from app.core.config import Settings
-from app.core.exceptions import ConfigurationError, IntegrationError
+from app.core.exceptions import ConfigurationError, EmailDeliveryBlocked, IntegrationError
 
 logger = logging.getLogger(__name__)
 
@@ -35,10 +36,28 @@ class ResendClient:
             return message_id
         except httpx.HTTPStatusError as exc:
             response = exc.response
+            try:
+                body = response.json()
+                name = body.get("name", "") if isinstance(body, dict) else ""
+            except ValueError:
+                name = ""
+            reason = (
+                name
+                if isinstance(name, str) and re.fullmatch(r"[a-z_]{1,80}", name)
+                else "provider_rejected"
+            )
+            # Validation/auth/recipient rejections cannot succeed unchanged.
+            # 408, concurrent 409, 429 and 5xx remain retryable.
+            if response.status_code in {400, 401, 403, 404, 405, 413, 422} or (
+                response.status_code == 409 and reason == "invalid_idempotent_request"
+            ):
+                raise EmailDeliveryBlocked(
+                    provider_status=response.status_code, reason=reason
+                ) from exc
             logger.error(
-                "Resend API rejected email with status %s: %s",
+                "Resend API rejected email with status %s (%s)",
                 response.status_code,
-                response.text,
+                reason,
             )
             raise IntegrationError(
                 "Resend did not confirm email acceptance; delivery can be retried"

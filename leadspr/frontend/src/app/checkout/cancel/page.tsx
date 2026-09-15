@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function CancelPage() {
   return (
     <PageIntro
-      eyebrow="Borinquen Life & Protection"
+      eyebrow="FSG Seguros"
       title="Saliste del proceso de pago."
       href="/leads"
       linkLabel="Volver al Marketplace"

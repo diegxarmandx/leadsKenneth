@@ -1,5 +1,9 @@
 // Presentation-only Spanish copy. Backend codes and domain values stay unchanged.
 const errors: Record<string, string> = {
+  email_delivery_blocked:
+    "Tus leads están asignados, pero el proveedor rechazó el correo. Administración debe revisar el destinatario y el remitente antes de reintentarlo. No necesitas volver a pagar.",
+  email_delivery_pending:
+    "Tus leads están asignados, pero el envío del correo falló. Puedes actualizar el estado para reintentar; no necesitas volver a pagar.",
   sheet_write_failed:
     "No se pudo confirmar el lead en Google Sheets. Reintenta este mismo envío; se comprobará si ya existe.",
   lead_identity_conflict:

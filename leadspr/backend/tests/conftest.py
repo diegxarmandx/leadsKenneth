@@ -51,12 +51,19 @@ class FakeStripe:
         self.real = StripeClient(config)
         self.calls = []
         self.error = None
+        self.sessions = {}
 
     def create_checkout(self, purchase):
         self.calls.append(purchase)
         if self.error:
             raise self.error
+        self.sessions[f"cs_{purchase.public_id}"] = {"status": "open", "payment_status": "unpaid"}
         return CheckoutSession(f"cs_{purchase.public_id}", "https://checkout.stripe.com/test")
+
+    def retrieve_checkout(self, checkout_id):
+        if self.error:
+            raise self.error
+        return self.sessions[checkout_id]
 
     def verify_event(self, payload, signature):
         return self.real.verify_event(payload, signature)

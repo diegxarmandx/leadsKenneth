@@ -1,4 +1,4 @@
-# LeadsPR — Borinquen Life & Protection
+# LeadsPR — FSG Seguros
 
 An agency-branded MVP for a Puerto Rico life insurance lead marketplace. Buyers check out as guests;
 eligible leads are randomly allocated only after a verified Stripe payment and delivered by email.

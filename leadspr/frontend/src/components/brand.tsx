@@ -1,20 +1,22 @@
 import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
+import Image from "next/image";
+import { company } from "@/lib/company";
 
 export function Brand({ light = false }: { light?: boolean }) {
   return (
     <Link
       href="/"
       className={`brand ${light ? "brand-light" : ""}`}
-      aria-label="Borinquen Life & Protection — Inicio"
+      aria-label={`${company.name} — Inicio`}
     >
-      <span className="brand-mark">
-        <ShieldCheck aria-hidden="true" strokeWidth={1.4} />
-      </span>
-      <span>
-        <span className="brand-name">Borinquen</span>
-        <span className="brand-descriptor">Life &amp; Protection</span>
-      </span>
+      <Image
+        src="/images/fsg/logo-fsg.jpg"
+        alt={`${company.name} — ${company.legalName}`}
+        width={960}
+        height={960}
+        sizes="(max-width: 600px) 160px, 180px"
+        className="brand-logo"
+      />
     </Link>
   );
 }

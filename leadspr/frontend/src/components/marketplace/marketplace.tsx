@@ -162,7 +162,7 @@ export function Marketplace() {
         <div className="page-heading">
           <div>
             <p className="eyebrow">Para profesionales de seguros</p>
-            <h1>Marketplace de Leads de Seguro de Vida</h1>
+            <h1>Marketplace de Leads para Agentes</h1>
             <p>
               Selecciona un municipio, escoge la antigüedad del lead que mejor
               se ajuste a tu estrategia y compra la cantidad que necesites.

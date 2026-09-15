@@ -4,7 +4,11 @@ import {
   errorResponse,
   requireSameOrigin,
 } from "@/lib/server/backend";
-import type { CheckoutConfig, CheckoutResponse } from "@/types/api";
+import type {
+  CheckoutConfig,
+  CheckoutResponse,
+  PublicPurchase,
+} from "@/types/api";
 
 type Context = { params: Promise<{ path: string[] }> };
 export const maxDuration = 120;
@@ -38,7 +42,16 @@ export async function GET(request: Request, context: Context) {
 export async function POST(request: Request, context: Context) {
   try {
     requireSameOrigin(request);
-    if ((await context.params).path.join("/") !== "checkout")
+    const path = (await context.params).path.join("/");
+    if (/^purchases\/ORD-[A-Z0-9-]{6,40}\/refresh$/.test(path)) {
+      // Only the order reference is forwarded. Stripe session/payment details
+      // are retrieved by the backend, never accepted from the browser.
+      return Response.json(
+        await backendRequest<PublicPurchase>(`/${path}`, { method: "POST" }),
+        { headers: { "Cache-Control": "no-store" } },
+      );
+    }
+    if (path !== "checkout")
       throw new BackendError(404, "not_found", "Página no encontrada.");
     const config = await backendRequest<CheckoutConfig>("/checkout/config");
     if (config.payment_mode !== "test")

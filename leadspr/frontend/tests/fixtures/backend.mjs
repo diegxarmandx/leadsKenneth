@@ -202,9 +202,22 @@ createServer(async (req, res) => {
     state.syncedLeadCount = state.leadRows.length;
     return send(syncRun());
   }
-  if (url.pathname === "/api/v1/purchases/ORD-TEST0002") {
+  if (
+    [
+      "/api/v1/purchases/ORD-TEST0002",
+      "/api/v1/purchases/ORD-TEST0002/refresh",
+    ].includes(url.pathname)
+  ) {
     if (state.purchaseDelay) await delay(state.purchaseDelay);
     if (state.purchaseError) return fail("Order service is unavailable.");
+    if (
+      url.pathname.endsWith("/refresh") &&
+      req.method === "POST" &&
+      state.reconcilePaid
+    ) {
+      state.orderStatus = "FULFILLED";
+      state.reconciliationCount = (state.reconciliationCount || 0) + 1;
+    }
     return send({
       public_id: "ORD-TEST0002",
       status: state.orderStatus,
@@ -217,7 +230,10 @@ createServer(async (req, res) => {
       created_at: timestamp,
       paid_at: null,
       fulfilled_at: null,
-      email_sent_at: state.orderStatus === "FULFILLED" ? timestamp : null,
+      email_sent_at:
+        state.orderStatus === "FULFILLED" && !state.emailPending
+          ? timestamp
+          : null,
     });
   }
   return fail("Not found", 404);

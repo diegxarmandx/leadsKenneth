@@ -1,6 +1,6 @@
 import logging
 
-from app.core.exceptions import DomainError
+from app.core.exceptions import DomainError, EmailDeliveryBlocked
 from app.integrations.stripe.client import CheckoutClient
 from app.services.email_service import EmailService
 from app.services.fulfillment_service import FulfillmentService
@@ -36,6 +36,10 @@ class WebhookService:
                 public_id = self.fulfillment.payment_succeeded(checkout)
                 try:
                     self.email.deliver(public_id)
+                except EmailDeliveryBlocked:
+                    # Fulfillment is committed; the persistent delivery block
+                    # requires admin action, not repeated webhook delivery.
+                    pass
                 except Exception as exc:
                     logger.exception(
                         "Post-fulfillment email delivery failed for %s: %s",

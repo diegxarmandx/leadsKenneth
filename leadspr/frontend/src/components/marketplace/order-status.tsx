@@ -11,8 +11,8 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { DemoBadge, Notice, Spinner } from "@/components/ui";
-import { getPurchase } from "@/services/marketplace";
-import { errorMessage } from "@/lib/api";
+import { getPurchase, refreshPurchase } from "@/services/marketplace";
+import { ApiError, errorMessage } from "@/lib/api";
 import { money } from "@/lib/format";
 import type { PublicPurchase } from "@/types/api";
 
@@ -21,6 +21,7 @@ export function OrderStatus({ publicId }: { publicId?: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [refresh, setRefresh] = useState(0);
+  const [pollingStopped, setPollingStopped] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -43,16 +44,42 @@ export function OrderStatus({ publicId }: { publicId?: string }) {
         setLoading(false);
         return;
       }
-      const result = await getPurchase(id, controller.signal);
+      let result = await getPurchase(id, controller.signal);
       if (controller.signal.aborted) return;
       setOrder(result);
+      const needsRefresh = (purchase: PublicPurchase) =>
+        purchase.status === "PENDING" ||
+        purchase.status === "PAID" ||
+        (purchase.status === "FULFILLED" && !purchase.email_sent_at);
+      if (needsRefresh(result)) {
+        try {
+          result = await refreshPurchase(id, controller.signal);
+        } catch (failure) {
+          if (controller.signal.aborted) throw failure;
+          if (
+            failure instanceof ApiError &&
+            ["email_delivery_pending", "email_delivery_blocked"].includes(
+              failure.code,
+            )
+          ) {
+            // Allocation may have committed before email failed. Show the saved
+            // order state while keeping the delivery error visible.
+            const saved = await getPurchase(id, controller.signal);
+            if (!controller.signal.aborted) setOrder(saved);
+          }
+          throw failure;
+        }
+        if (controller.signal.aborted) return;
+        setOrder(result);
+      }
       setError("");
       setLoading(false);
-      const waiting =
-        result.status === "PENDING" ||
-        result.status === "PAID" ||
-        (result.status === "FULFILLED" && !result.email_sent_at);
-      if (waiting && ++attempts < 60) timer = setTimeout(runPoll, 2000);
+      const waiting = needsRefresh(result);
+      if (waiting && ++attempts < 12) {
+        timer = setTimeout(runPoll, Math.min(attempts * 2000, 10_000));
+      } else {
+        setPollingStopped(waiting);
+      }
     }
     function runPoll() {
       // Timers do not consume returned promises; handle every poll explicitly.
@@ -97,11 +124,11 @@ export function OrderStatus({ publicId }: { publicId?: string }) {
               <Clock3 size={33} aria-hidden="true" />
             )}
           </span>
-          <p className="eyebrow">Borinquen Life &amp; Protection</p>
+          <p className="eyebrow">FSG Seguros</p>
           <h1>{title}</h1>
           <p>
             {fulfilled
-              ? "Tus leads ya están asignados. Gracias por confiar en Borinquen Life & Protection."
+              ? "Tus leads ya están asignados. Gracias por confiar en FSG Seguros."
               : order?.status === "FULFILLMENT_FAILED"
                 ? "Registramos tu pago de prueba, pero la cantidad completa ya no estaba disponible al precio seleccionado. No se asignaron leads parcialmente. La orden está marcada en Administración para revisión."
                 : failed
@@ -109,6 +136,13 @@ export function OrderStatus({ publicId }: { publicId?: string }) {
                   : "Confirmar el pago y asignar los leads puede tomar un momento. Esta página se actualizará según avance tu orden."}
           </p>
           {error && <Notice>{error}</Notice>}
+          {pollingStopped && !error && (
+            <Notice tone="info">
+              Tu orden todavía está en proceso. Pausamos las consultas
+              automáticas. Puedes actualizar el estado en unos minutos; no
+              vuelvas a pagar esta orden.
+            </Notice>
+          )}
           {order && (
             <dl className="order-result-details">
               <div>
@@ -152,6 +186,7 @@ export function OrderStatus({ publicId }: { publicId?: string }) {
               disabled={loading}
               onClick={() => {
                 setLoading(true);
+                setPollingStopped(false);
                 setRefresh((value) => value + 1);
               }}
             >

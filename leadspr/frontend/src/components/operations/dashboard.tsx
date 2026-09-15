@@ -164,7 +164,7 @@ export function Dashboard({
         <div className="page-heading">
           <div>
             <p className="eyebrow">Resumen de la agencia</p>
-            <h1>Operaciones de Borinquen Life</h1>
+            <h1>Operaciones FSG</h1>
             <p>
               Una vista clara de tus leads, órdenes y actividad en el
               marketplace.

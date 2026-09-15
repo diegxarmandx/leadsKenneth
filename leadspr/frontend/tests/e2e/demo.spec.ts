@@ -54,7 +54,7 @@ test("navigation, responsive layout, and accessible pages", async ({
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-      "Protegiendo a las familias de Puerto Rico para lo que viene",
+      /Tu familia\. Tu futuro\.\s*Vamos a protegerlos\./,
     );
     for (const path of ["/", "/leads", "/admin"]) {
       await page.goto(path);
@@ -85,7 +85,7 @@ test("navigation, responsive layout, and accessible pages", async ({
       .getByRole("link", { name: "Inicio", exact: true })
       .click();
     await page
-      .getByRole("link", { name: "Explorar Leads para Agentes", exact: true })
+      .getByRole("link", { name: "Ver Leads Disponibles", exact: true })
       .click();
     await expect(page).toHaveURL(/\/leads$/);
     await expect(

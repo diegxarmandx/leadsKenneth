@@ -42,3 +42,10 @@ export function getPurchase(publicId: string, signal?: AbortSignal) {
     { signal },
   );
 }
+
+export function refreshPurchase(publicId: string, signal?: AbortSignal) {
+  return apiRequest<PublicPurchase>(
+    `/purchases/${encodeURIComponent(publicId)}/refresh`,
+    { method: "POST", signal },
+  );
+}

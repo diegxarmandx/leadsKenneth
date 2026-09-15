@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { company } from "@/lib/company";
 import "@fontsource/manrope/latin-400.css";
 import "@fontsource/manrope/latin-500.css";
 import "@fontsource/manrope/latin-600.css";
@@ -12,11 +13,22 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Borinquen Life & Protection",
-    template: "%s | Borinquen Life & Protection",
+    default: "FSG Seguros — Asesoría en seguros en Puerto Rico",
+    template: "%s | FSG Seguros",
   },
-  description:
-    "Soluciones de seguro de vida diseñadas para las necesidades de las familias en Puerto Rico. Cobertura para Hoy. Protección para Mañana.",
+  description: company.description,
+  applicationName: company.name,
+  icons: {
+    icon: { url: "/images/fsg/logo-fsg.jpg", type: "image/jpeg" },
+    apple: "/images/fsg/logo-fsg.jpg",
+  },
+  openGraph: {
+    title: "FSG Seguros — Asesoría en seguros en Puerto Rico",
+    description: company.description,
+    siteName: company.name,
+    locale: "es_PR",
+    type: "website",
+  },
   robots: { index: false, follow: false },
 };
 

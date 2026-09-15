@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowUpRight, MapPin } from "lucide-react";
 import { Brand } from "@/components/brand";
+import { company } from "@/lib/company";
 
 const links = [
   { href: "/", label: "Inicio" },
@@ -18,11 +19,11 @@ export function Navbar() {
       <div className="brand-bar">
         <div className="container">
           <span>
-            <MapPin size={12} aria-hidden="true" /> De Puerto Rico. Pensando en
-            ti.
+            <MapPin size={12} aria-hidden="true" /> Asesoría en seguros · Puerto
+            Rico
           </span>
           <span className="brand-bar-tagline">
-            Cobertura para Hoy. Protección para Mañana.
+            <a href={company.phoneHref}>{company.phone}</a>
           </span>
         </div>
       </div>
